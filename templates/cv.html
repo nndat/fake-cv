@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CV của bạn</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding: 20px;
+        }
+        .cv-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .cv-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+        }
+        .cv-section h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #2c3e50;
+        }
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+        }
+        .form-control {
+            margin-bottom: 15px;
+        }
+        .form-control:focus {
+            border-color: #2c3e50;
+            box-shadow: 0 0 0 0.2rem rgba(44, 62, 80, 0.25);
+        }
+        .error-message {
+            color: #dc3545;
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #dc3545;
+            border-radius: 5px;
+            background-color: #f8d7da;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="cv-container">
+            <h1 class="text-center mb-4">CV của bạn</h1>
+            {% if error %}
+            <div class="error-message">
+                {{ error }}
+            </div>
+            {% endif %}
+            <form action="{{ url_for('download_cv') }}" method="POST">
+                <div class="cv-section">
+                    <h2>Thông tin cá nhân</h2>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" name="name" value="{{ cv_data.personal_info.name if cv_data else form.name.data or '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" value="{{ cv_data.personal_info.email if cv_data else form.email.data or '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số điện thoại</label>
+                        <input type="tel" class="form-control" name="phone" value="{{ cv_data.personal_info.phone if cv_data else form.phone.data or '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Mô tả bản thân</label>
+                        <textarea class="form-control" name="summary" rows="3">{{ cv_data.personal_info.summary if cv_data else '' }}</textarea>
+                    </div>
+                </div>
+
+                <div class="cv-section">
+                    <h2>Học vấn</h2>
+                    {% if cv_data and cv_data.education %}
+                        {% for edu in cv_data.education %}
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Bằng cấp</label>
+                                        <input type="text" class="form-control" name="education_degree[]" value="{{ edu.degree }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Trường học</label>
+                                        <input type="text" class="form-control" name="education_school[]" value="{{ edu.school }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Năm tốt nghiệp</label>
+                                        <input type="text" class="form-control" name="education_year[]" value="{{ edu.year }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả chi tiết</label>
+                                <textarea class="form-control" name="education_description[]" rows="2">{{ edu.description }}</textarea>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="mb-3">
+                            <textarea class="form-control" name="education" rows="4">{{ form.education.data or '' }}</textarea>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="cv-section">
+                    <h2>Kinh nghiệm</h2>
+                    {% if cv_data and cv_data.experience %}
+                        {% for exp in cv_data.experience %}
+                        <div class="mb-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Vị trí</label>
+                                        <input type="text" class="form-control" name="experience_position[]" value="{{ exp.position }}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Công ty</label>
+                                        <input type="text" class="form-control" name="experience_company[]" value="{{ exp.company }}">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Thời gian</label>
+                                <input type="text" class="form-control" name="experience_period[]" value="{{ exp.period }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Mô tả công việc</label>
+                                <textarea class="form-control" name="experience_description[]" rows="3">{{ exp.description }}</textarea>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="mb-3">
+                            <textarea class="form-control" name="experience" rows="6">{{ form.experience.data or '' }}</textarea>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="cv-section">
+                    <h2>Kỹ năng</h2>
+                    {% if cv_data and cv_data.skills %}
+                        {% for skill_group in cv_data.skills %}
+                        <div class="mb-4">
+                            <div class="mb-3">
+                                <label class="form-label">Nhóm kỹ năng</label>
+                                <input type="text" class="form-control" name="skill_category[]" value="{{ skill_group.category }}">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Các kỹ năng</label>
+                                <textarea class="form-control" name="skill_items[]" rows="2">{{ skill_group['items'] | join(', ') }}</textarea>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="mb-3">
+                            <textarea class="form-control" name="skills" rows="4">{{ form.skills.data or '' }}</textarea>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="/" class="btn btn-secondary">Quay lại</a>
+                    <div>
+                        <button type="submit" class="btn btn-primary">Tải xuống PDF</button>
+                        <button type="button" class="btn btn-success ms-2" onclick="updateCV()">Cập nhật CV</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function updateCV() {
+            const form = document.querySelector('form');
+            const formData = new FormData(form);
+            
+            fetch('/', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.text())
+            .then(html => {
+                document.documentElement.innerHTML = html;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Có lỗi xảy ra khi cập nhật CV');
+            });
+        }
+    </script>
+</body>
+</html> 
