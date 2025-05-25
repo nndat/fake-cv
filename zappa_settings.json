@@ -1,0 +1,37 @@
+{
+    "dev": {
+        "app_function": "app.app",
+        "aws_region": "ap-northeast-1",
+        "profile_name": "default",
+        "project_name": "fake-cv",
+        "runtime": "python3.9",
+        "s3_bucket": "zappa-fake-cv",
+        "keep_warm": true,
+        "binary_support": true,
+        "use_precompiled_packages": true,
+        "include": [
+            "templates/*",
+            "static/*",
+            "fonts/*"
+        ],
+        "exclude": [
+            "*.pyc",
+            "*.pyo",
+            "*.pyd",
+            ".git/*",
+            ".gitignore",
+            ".env",
+            "venv/*",
+            "__pycache__/*"
+        ],
+        "lambda_package": "lambda_package.zip",
+        "lambda_description": "Fake CV Generator",
+        "lambda_timeout_seconds": 30,
+        "lambda_memory_size": 512,
+        "aws_environment_variables": {
+            "GOOGLE_API_KEY": "GOOGLE_API_KEY"
+        },
+        "manage_roles": false,
+        "role_name": "YOUR_ROLE_NAME"
+    }
+}
