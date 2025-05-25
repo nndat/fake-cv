@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="{{ form.language.data }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tạo CV với AI</title>
+    <title>{{ 'Create CV with AI' if form.language.data == 'en' else 'Tạo CV với AI' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -63,35 +63,39 @@
 
     <div class="container">
         <div class="form-container">
-            <h1 class="text-center mb-4">Tạo CV với AI</h1>
+            <h1 class="text-center mb-4">{{ 'Create CV with AI' if form.language.data == 'en' else 'Tạo CV với AI' }}</h1>
             <form method="POST" id="cvForm">
                 {{ form.csrf_token }}
                 <div class="mb-3">
-                    {{ form.name.label(class="form-label") }}
+                    <label class="form-label">{{ 'Language' if form.language.data == 'en' else 'Ngôn ngữ' }}</label>
+                    {{ form.language(class="form-select") }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">{{ 'Full Name' if form.language.data == 'en' else 'Họ và tên' }}</label>
                     {{ form.name(class="form-control") }}
                 </div>
                 <div class="mb-3">
-                    {{ form.email.label(class="form-label") }}
+                    <label class="form-label">Email</label>
                     {{ form.email(class="form-control") }}
                 </div>
                 <div class="mb-3">
-                    {{ form.phone.label(class="form-label") }}
+                    <label class="form-label">{{ 'Phone Number' if form.language.data == 'en' else 'Số điện thoại' }}</label>
                     {{ form.phone(class="form-control") }}
                 </div>
                 <div class="mb-3">
-                    {{ form.education.label(class="form-label") }}
+                    <label class="form-label">{{ 'Education' if form.language.data == 'en' else 'Học vấn' }}</label>
                     {{ form.education(class="form-control", rows=3) }}
                 </div>
                 <div class="mb-3">
-                    {{ form.experience.label(class="form-label") }}
+                    <label class="form-label">{{ 'Experience' if form.language.data == 'en' else 'Kinh nghiệm' }}</label>
                     {{ form.experience(class="form-control", rows=5) }}
                 </div>
                 <div class="mb-3">
-                    {{ form.skills.label(class="form-label") }}
+                    <label class="form-label">{{ 'Skills' if form.language.data == 'en' else 'Kỹ năng' }}</label>
                     {{ form.skills(class="form-control", rows=3) }}
                 </div>
                 <div class="text-center">
-                    {{ form.submit(class="btn btn-primary", id="submitButton") }}
+                    {{ form.submit(class="btn btn-primary", id="submitButton", value="Create CV" if form.language.data == 'en' else "Tạo CV") }}
                 </div>
             </form>
         </div>
@@ -107,6 +111,34 @@
         // Thêm event listener cho form submit
         document.getElementById('cvForm').addEventListener('submit', function(e) {
             showLoading();
+        });
+
+        // Cập nhật ngôn ngữ khi thay đổi select
+        document.querySelector('select[name="language"]').addEventListener('change', function() {
+            const language = this.value;
+            const labels = document.querySelectorAll('.form-label');
+            const submitButton = document.getElementById('submitButton');
+            
+            labels.forEach(label => {
+                const text = label.textContent;
+                if (text === 'Ngôn ngữ' || text === 'Language') {
+                    label.textContent = language === 'en' ? 'Language' : 'Ngôn ngữ';
+                } else if (text === 'Họ và tên' || text === 'Full Name') {
+                    label.textContent = language === 'en' ? 'Full Name' : 'Họ và tên';
+                } else if (text === 'Số điện thoại' || text === 'Phone Number') {
+                    label.textContent = language === 'en' ? 'Phone Number' : 'Số điện thoại';
+                } else if (text === 'Học vấn' || text === 'Education') {
+                    label.textContent = language === 'en' ? 'Education' : 'Học vấn';
+                } else if (text === 'Kinh nghiệm' || text === 'Experience') {
+                    label.textContent = language === 'en' ? 'Experience' : 'Kinh nghiệm';
+                } else if (text === 'Kỹ năng' || text === 'Skills') {
+                    label.textContent = language === 'en' ? 'Skills' : 'Kỹ năng';
+                }
+            });
+            
+            submitButton.value = language === 'en' ? 'Create CV' : 'Tạo CV';
+            document.title = language === 'en' ? 'Create CV with AI' : 'Tạo CV với AI';
+            document.querySelector('h1').textContent = language === 'en' ? 'Create CV with AI' : 'Tạo CV với AI';
         });
     </script>
 </body>

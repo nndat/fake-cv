@@ -6,7 +6,7 @@ import logging
 
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_wtf import FlaskForm
-from wtforms import StringField, TextAreaField, SubmitField
+from wtforms import StringField, TextAreaField, SubmitField, SelectField
 import google.generativeai as genai
 from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
@@ -76,6 +76,7 @@ class CVForm(FlaskForm):
     education = TextAreaField('Học vấn')
     experience = TextAreaField('Kinh nghiệm')
     skills = TextAreaField('Kỹ năng')
+    language = SelectField('Ngôn ngữ', choices=[('vi', 'Tiếng Việt'), ('en', 'English')], default='vi')
     submit = SubmitField('Tạo CV')
 
 @app.route('/', methods=['GET', 'POST'])
@@ -89,53 +90,101 @@ def index():
         form.education.data = request.form.get('education')
         form.experience.data = request.form.get('experience')
         form.skills.data = request.form.get('skills')
+        form.language.data = request.form.get('language', 'vi')
 
-        # Tạo prompt cho Gemini
-        prompt = f"""
-        Dựa trên thông tin sau, tạo một CV chuyên nghiệp dưới dạng JSON với cấu trúc như sau:
-        {{
-            "personal_info": {{
-                "name": "Họ và tên",
-                "email": "Email",
-                "phone": "Số điện thoại",
-                "summary": "Mô tả ngắn gọn về bản thân"
-            }},
-            "education": [
-                {{
-                    "degree": "Bằng cấp",
-                    "school": "Trường học",
-                    "year": "Năm tốt nghiệp",
-                    "description": "Mô tả chi tiết"
-                }}
-            ],
-            "experience": [
-                {{
-                    "position": "Vị trí",
-                    "company": "Công ty",
-                    "period": "Thời gian",
-                    "description": "Mô tả công việc"
-                }}
-            ],
-            "skills": [
-                {{
-                    "category": "Nhóm kỹ năng",
-                    "items": ["Kỹ năng 1", "Kỹ năng 2"]
-                }}
-            ]
-        }}
+        # Tạo prompt cho Gemini dựa trên ngôn ngữ
+        language = form.language.data
+        if language == 'en':
+            prompt = f"""
+            Based on the following information, create a professional CV in JSON format with the following structure:
+            {{
+                "personal_info": {{
+                    "name": "Full Name",
+                    "email": "Email",
+                    "phone": "Phone Number",
+                    "summary": "Brief self-description"
+                }},
+                "education": [
+                    {{
+                        "degree": "Degree",
+                        "school": "School",
+                        "year": "Graduation Year",
+                        "description": "Detailed description"
+                    }}
+                ],
+                "experience": [
+                    {{
+                        "position": "Position",
+                        "company": "Company",
+                        "period": "Time Period",
+                        "description": "Job Description"
+                    }}
+                ],
+                "skills": [
+                    {{
+                        "category": "Skill Category",
+                        "items": ["Skill 1", "Skill 2"]
+                    }}
+                ]
+            }}
 
-        Thông tin đầu vào:
-        Họ và tên: {form.name.data}
-        Email: {form.email.data}
-        Số điện thoại: {form.phone.data}
-        Học vấn: {form.education.data}
-        Kinh nghiệm: {form.experience.data}
-        Kỹ năng: {form.skills.data}
+            Input Information:
+            Full Name: {form.name.data}
+            Email: {form.email.data}
+            Phone Number: {form.phone.data}
+            Education: {form.education.data}
+            Experience: {form.experience.data}
+            Skills: {form.skills.data}
 
-        Hãy tạo một CV đầy đủ và chuyên nghiệp, bổ sung thêm các thông tin phù hợp nếu cần.
-        Chỉ trả về JSON, không thêm bất kỳ text nào khác.
-        """
-        
+            Please create a complete and professional CV, adding appropriate information if needed.
+            Return only JSON, no additional text.
+            """
+        else:
+            prompt = f"""
+            Dựa trên thông tin sau, tạo một CV chuyên nghiệp dưới dạng JSON với cấu trúc như sau:
+            {{
+                "personal_info": {{
+                    "name": "Họ và tên",
+                    "email": "Email",
+                    "phone": "Số điện thoại",
+                    "summary": "Mô tả ngắn gọn về bản thân"
+                }},
+                "education": [
+                    {{
+                        "degree": "Bằng cấp",
+                        "school": "Trường học",
+                        "year": "Năm tốt nghiệp",
+                        "description": "Mô tả chi tiết"
+                    }}
+                ],
+                "experience": [
+                    {{
+                        "position": "Vị trí",
+                        "company": "Công ty",
+                        "period": "Thời gian",
+                        "description": "Mô tả công việc"
+                    }}
+                ],
+                "skills": [
+                    {{
+                        "category": "Nhóm kỹ năng",
+                        "items": ["Kỹ năng 1", "Kỹ năng 2"]
+                    }}
+                ]
+            }}
+
+            Thông tin đầu vào:
+            Họ và tên: {form.name.data}
+            Email: {form.email.data}
+            Số điện thoại: {form.phone.data}
+            Học vấn: {form.education.data}
+            Kinh nghiệm: {form.experience.data}
+            Kỹ năng: {form.skills.data}
+
+            Hãy tạo một CV đầy đủ và chuyên nghiệp, bổ sung thêm các thông tin phù hợp nếu cần.
+            Chỉ trả về JSON, không thêm bất kỳ text nào khác.
+            """
+
         # Gọi Gemini API
         response = model.generate_content(prompt)
         try:
@@ -154,7 +203,7 @@ def index():
             print("CV Data:", cv_data)  # Debug print
             
             # Lưu CV vào session để có thể chỉnh sửa sau
-            return render_template('cv.html', cv_data=cv_data, form=form)
+            return render_template('cv.html', cv_data=cv_data, form=form, language=language)
         except json.JSONDecodeError as e:
             print("Error parsing JSON:", e)
             print("Raw response:", response.text)
@@ -171,6 +220,9 @@ def download_cv():
         'phone': request.form.get('phone', ''),
         'summary': request.form.get('summary', '')
     }
+    
+    # Lấy ngôn ngữ từ form
+    language = request.form.get('language', 'vi')
     
     # Xử lý dữ liệu học vấn
     education = []
@@ -233,17 +285,16 @@ def download_cv():
         story = []
         
         # Thông tin cá nhân
-        story.append(Paragraph("Thông tin cá nhân", styles['CustomTitle']))
-        story.append(Paragraph(f"<b>Họ và tên:</b> {personal_info['name']}", styles['CustomNormal']))
-        story.append(Paragraph("<b>Họ tên:</b>", styles['CustomNormal']))
+        story.append(Paragraph("Personal Information" if language == 'en' else "Thông tin cá nhân", styles['CustomTitle']))
+        story.append(Paragraph(f"<b>Full Name:</b> {personal_info['name']}" if language == 'en' else f"<b>Họ và tên:</b> {personal_info['name']}", styles['CustomNormal']))
         story.append(Paragraph(f"<b>Email:</b> {personal_info['email']}", styles['CustomNormal']))
-        story.append(Paragraph(f"<b>Số điện thoại:</b> {personal_info['phone']}", styles['CustomNormal']))
-        story.append(Paragraph(f"<b>Mô tả bản thân:</b>", styles['CustomNormal']))
+        story.append(Paragraph(f"<b>Phone Number:</b> {personal_info['phone']}" if language == 'en' else f"<b>Số điện thoại:</b> {personal_info['phone']}", styles['CustomNormal']))
+        story.append(Paragraph("<b>Self Description:</b>" if language == 'en' else "<b>Mô tả bản thân:</b>", styles['CustomNormal']))
         story.append(Paragraph(personal_info['summary'], styles['CustomNormal']))
         story.append(Spacer(1, 20))
         
         # Học vấn
-        story.append(Paragraph("Học vấn", styles['CustomHeading']))
+        story.append(Paragraph("Education" if language == 'en' else "Học vấn", styles['CustomHeading']))
         for edu in education:
             story.append(Paragraph(f"<b>{edu['degree']}</b>", styles['CustomNormal']))
             story.append(Paragraph(f"{edu['school']} - {edu['year']}", styles['CustomNormal']))
@@ -251,7 +302,7 @@ def download_cv():
             story.append(Spacer(1, 12))
         
         # Kinh nghiệm
-        story.append(Paragraph("Kinh nghiệm", styles['CustomHeading']))
+        story.append(Paragraph("Experience" if language == 'en' else "Kinh nghiệm", styles['CustomHeading']))
         for exp in experience:
             story.append(Paragraph(f"<b>{exp['position']}</b>", styles['CustomNormal']))
             story.append(Paragraph(f"{exp['company']} - {exp['period']}", styles['CustomNormal']))
@@ -259,7 +310,7 @@ def download_cv():
             story.append(Spacer(1, 12))
         
         # Kỹ năng
-        story.append(Paragraph("Kỹ năng", styles['CustomHeading']))
+        story.append(Paragraph("Skills" if language == 'en' else "Kỹ năng", styles['CustomHeading']))
         for skill in skills:
             story.append(Paragraph(f"<b>{skill['category']}</b>", styles['CustomNormal']))
             items = [ListItem(Paragraph(item, styles['CustomNormal'])) for item in skill['items']]

@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="{{ language }}">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CV của bạn</title>
+    <title>{{ 'Your CV' if language == 'en' else 'CV của bạn' }}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -88,25 +88,26 @@
     <div class="loading-overlay">
         <div class="text-center">
             <div class="loading-spinner"></div>
-            <div class="loading-text">Đang xử lý...</div>
+            <div class="loading-text">{{ 'Processing...' if language == 'en' else 'Đang xử lý...' }}</div>
         </div>
     </div>
 
     <div class="container">
         <div class="cv-container">
-            <h1 class="text-center mb-4">CV của bạn</h1>
+            <h1 class="text-center mb-4">{{ 'Your CV' if language == 'en' else 'CV của bạn' }}</h1>
             {% if error %}
             <div class="error-message">
                 {{ error }}
             </div>
             {% endif %}
             <form action="{{ url_for('download_cv') }}" method="POST" id="cvForm">
+                <input type="hidden" name="language" value="{{ language }}">
                 <div class="cv-section">
-                    <h2>Thông tin cá nhân</h2>
+                    <h2>{{ 'Personal Information' if language == 'en' else 'Thông tin cá nhân' }}</h2>
                     <div class="row">
                         <div class="col-md-6">
                             <div class="mb-3">
-                                <label class="form-label">Họ và tên</label>
+                                <label class="form-label">{{ 'Full Name' if language == 'en' else 'Họ và tên' }}</label>
                                 <input type="text" class="form-control" name="name" value="{{ cv_data.personal_info.name if cv_data else form.name.data or '' }}">
                             </div>
                         </div>
@@ -118,30 +119,30 @@
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Số điện thoại</label>
+                        <label class="form-label">{{ 'Phone Number' if language == 'en' else 'Số điện thoại' }}</label>
                         <input type="tel" class="form-control" name="phone" value="{{ cv_data.personal_info.phone if cv_data else form.phone.data or '' }}">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label">Mô tả bản thân</label>
+                        <label class="form-label">{{ 'Self Description' if language == 'en' else 'Mô tả bản thân' }}</label>
                         <textarea class="form-control" name="summary" rows="3">{{ cv_data.personal_info.summary if cv_data else '' }}</textarea>
                     </div>
                 </div>
 
                 <div class="cv-section">
-                    <h2>Học vấn</h2>
+                    <h2>{{ 'Education' if language == 'en' else 'Học vấn' }}</h2>
                     {% if cv_data and cv_data.education %}
                         {% for edu in cv_data.education %}
                         <div class="mb-4">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Bằng cấp</label>
+                                        <label class="form-label">{{ 'Degree' if language == 'en' else 'Bằng cấp' }}</label>
                                         <input type="text" class="form-control" name="education_degree[]" value="{{ edu.degree }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Trường học</label>
+                                        <label class="form-label">{{ 'School' if language == 'en' else 'Trường học' }}</label>
                                         <input type="text" class="form-control" name="education_school[]" value="{{ edu.school }}">
                                     </div>
                                 </div>
@@ -149,13 +150,13 @@
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Năm tốt nghiệp</label>
+                                        <label class="form-label">{{ 'Graduation Year' if language == 'en' else 'Năm tốt nghiệp' }}</label>
                                         <input type="text" class="form-control" name="education_year[]" value="{{ edu.year }}">
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Mô tả chi tiết</label>
+                                <label class="form-label">{{ 'Detailed Description' if language == 'en' else 'Mô tả chi tiết' }}</label>
                                 <textarea class="form-control" name="education_description[]" rows="2">{{ edu.description }}</textarea>
                             </div>
                         </div>
@@ -168,30 +169,30 @@
                 </div>
 
                 <div class="cv-section">
-                    <h2>Kinh nghiệm</h2>
+                    <h2>{{ 'Experience' if language == 'en' else 'Kinh nghiệm' }}</h2>
                     {% if cv_data and cv_data.experience %}
                         {% for exp in cv_data.experience %}
                         <div class="mb-4">
                             <div class="row">
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Vị trí</label>
+                                        <label class="form-label">{{ 'Position' if language == 'en' else 'Vị trí' }}</label>
                                         <input type="text" class="form-control" name="experience_position[]" value="{{ exp.position }}">
                                     </div>
                                 </div>
                                 <div class="col-md-6">
                                     <div class="mb-3">
-                                        <label class="form-label">Công ty</label>
+                                        <label class="form-label">{{ 'Company' if language == 'en' else 'Công ty' }}</label>
                                         <input type="text" class="form-control" name="experience_company[]" value="{{ exp.company }}">
                                     </div>
                                 </div>
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Thời gian</label>
+                                <label class="form-label">{{ 'Time Period' if language == 'en' else 'Thời gian' }}</label>
                                 <input type="text" class="form-control" name="experience_period[]" value="{{ exp.period }}">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Mô tả công việc</label>
+                                <label class="form-label">{{ 'Job Description' if language == 'en' else 'Mô tả công việc' }}</label>
                                 <textarea class="form-control" name="experience_description[]" rows="3">{{ exp.description }}</textarea>
                             </div>
                         </div>
@@ -204,16 +205,16 @@
                 </div>
 
                 <div class="cv-section">
-                    <h2>Kỹ năng</h2>
+                    <h2>{{ 'Skills' if language == 'en' else 'Kỹ năng' }}</h2>
                     {% if cv_data and cv_data.skills %}
                         {% for skill_group in cv_data.skills %}
                         <div class="mb-4">
                             <div class="mb-3">
-                                <label class="form-label">Nhóm kỹ năng</label>
+                                <label class="form-label">{{ 'Skill Category' if language == 'en' else 'Nhóm kỹ năng' }}</label>
                                 <input type="text" class="form-control" name="skill_category[]" value="{{ skill_group.category }}">
                             </div>
                             <div class="mb-3">
-                                <label class="form-label">Các kỹ năng</label>
+                                <label class="form-label">{{ 'Skills' if language == 'en' else 'Các kỹ năng' }}</label>
                                 <textarea class="form-control" name="skill_items[]" rows="2">{{ skill_group['items'] | join(', ') }}</textarea>
                             </div>
                         </div>
@@ -226,10 +227,10 @@
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">
-                    <a href="/" class="btn btn-secondary" id="backButton">Quay lại</a>
+                    <a href="/" class="btn btn-secondary" id="backButton">{{ 'Back' if language == 'en' else 'Quay lại' }}</a>
                     <div>
-                        <button type="submit" class="btn btn-primary" id="downloadButton">Tải xuống PDF</button>
-                        <button type="button" class="btn btn-success ms-2" id="updateButton" onclick="updateCV()">Cập nhật CV</button>
+                        <button type="submit" class="btn btn-primary" id="downloadButton">{{ 'Download PDF' if language == 'en' else 'Tải xuống PDF' }}</button>
+                        <button type="button" class="btn btn-success ms-2" id="updateButton" onclick="updateCV()">{{ 'Update CV' if language == 'en' else 'Cập nhật CV' }}</button>
                     </div>
                 </div>
             </form>
@@ -239,6 +240,7 @@
     <script>
         // Lấy download URL từ server
         const downloadUrl = '{{ url_for("download_cv") }}';
+        const language = '{{ language }}';
         
         function showLoading() {
             document.querySelector('.loading-overlay').style.display = 'flex';
@@ -269,7 +271,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Có lỗi xảy ra khi cập nhật CV');
+                alert(language === 'en' ? 'Error updating CV' : 'Có lỗi xảy ra khi cập nhật CV');
                 hideLoading();
             });
         }
@@ -279,7 +281,6 @@
             const form = document.querySelector('form');
             const formData = new FormData(form);
             
-            // Sử dụng URL từ url_for
             fetch(downloadUrl, {
                 method: 'POST',
                 body: formData
@@ -302,7 +303,7 @@
             })
             .catch(error => {
                 console.error('Error:', error);
-                alert('Có lỗi xảy ra khi tạo PDF');
+                alert(language === 'en' ? 'Error creating PDF' : 'Có lỗi xảy ra khi tạo PDF');
             })
             .finally(() => {
                 hideLoading();
