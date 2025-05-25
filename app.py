@@ -28,11 +28,13 @@ app.config['SECRET_KEY'] = os.urandom(24)
 
 # Cấu hình Gemini API
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+AI_MODEL = os.getenv('AI_MODEL', 'gemini-2.0-flash')  # Sử dụng giá trị mặc định nếu không có trong .env
+
 if not GOOGLE_API_KEY:
     raise ValueError("Không tìm thấy GOOGLE_API_KEY trong biến môi trường")
 
 genai.configure(api_key=GOOGLE_API_KEY)
-model = genai.GenerativeModel('gemini-2.0-flash')
+model = genai.GenerativeModel(AI_MODEL)
 
 # Đăng ký font Times New Roman
 pdfmetrics.registerFont(TTFont('TimesNewRoman', 'fonts/TimesNewRoman.ttf'))

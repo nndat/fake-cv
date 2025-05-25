@@ -38,9 +38,10 @@ source venv/bin/activate  # Linux/Mac
 pip install -r requirements.txt
 ```
 
-4. Tạo file `.env` và thêm Google API key:
+4. Tạo file `.env` và thêm các biến môi trường:
 ```
 GOOGLE_API_KEY=your_api_key_here
+AI_MODEL=gemini-2.0-flash  # Có thể thay đổi model AI tại đây
 ```
 
 ## Cấu trúc thư mục
@@ -114,7 +115,8 @@ aws configure
         "lambda_timeout_seconds": 30,
         "lambda_memory_size": 512,
         "aws_environment_variables": {
-            "GOOGLE_API_KEY": "your_api_key_here"
+            "GOOGLE_API_KEY": "your_api_key_here",
+            "AI_MODEL": "gemini-2.0-flash"
         },
         "manage_roles": false,
         "role_name": "ZappaDeploymentRole"

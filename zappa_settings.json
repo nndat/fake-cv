@@ -29,9 +29,10 @@
         "lambda_timeout_seconds": 30,
         "lambda_memory_size": 512,
         "aws_environment_variables": {
-            "GOOGLE_API_KEY": "GOOGLE_API_KEY"
+            "GOOGLE_API_KEY": "your_api_key_here",
+            "AI_MODEL": "gemini-2.0-flash"
         },
         "manage_roles": false,
-        "role_name": "YOUR_ROLE_NAME"
+        "role_name": "ZappaDeploymentRole"
     }
 }
