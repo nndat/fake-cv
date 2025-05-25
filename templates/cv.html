@@ -239,20 +239,14 @@
     <script>
         function showLoading() {
             document.querySelector('.loading-overlay').style.display = 'flex';
-            document.getElementById('backButton').classList.add('button-disabled');
-            document.getElementById('downloadButton').classList.add('button-disabled');
-            document.getElementById('updateButton').classList.add('button-disabled');
-            document.getElementById('backButton').style.pointerEvents = 'none';
+            document.getElementById('backButton').disabled = true;
             document.getElementById('downloadButton').disabled = true;
             document.getElementById('updateButton').disabled = true;
         }
 
         function hideLoading() {
             document.querySelector('.loading-overlay').style.display = 'none';
-            document.getElementById('backButton').classList.remove('button-disabled');
-            document.getElementById('downloadButton').classList.remove('button-disabled');
-            document.getElementById('updateButton').classList.remove('button-disabled');
-            document.getElementById('backButton').style.pointerEvents = 'auto';
+            document.getElementById('backButton').disabled = false;
             document.getElementById('downloadButton').disabled = false;
             document.getElementById('updateButton').disabled = false;
         }
@@ -277,9 +271,41 @@
             });
         }
 
-        // Thêm event listener cho form submit
         document.getElementById('cvForm').addEventListener('submit', function(e) {
+            e.preventDefault();
             showLoading();
+            
+            // Tạo form data
+            const formData = new FormData(this);
+            
+            // Gửi request
+            fetch('/download', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.blob();
+            })
+            .then(blob => {
+                // Tạo URL cho file PDF
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'cv.pdf';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                hideLoading();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                hideLoading();
+                alert('Có lỗi xảy ra khi tải CV. Vui lòng thử lại.');
+            });
         });
     </script>
 </body>

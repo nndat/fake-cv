@@ -2,19 +2,27 @@ import os
 from dotenv import load_dotenv
 import json
 import re
-
-# Load biến môi trường từ file .env
-load_dotenv()
+import logging
 
 from flask import Flask, render_template, request, jsonify, send_file
 from flask_wtf import FlaskForm
 from wtforms import StringField, TextAreaField, SubmitField
-from wtforms.validators import DataRequired
 import google.generativeai as genai
-from weasyprint import HTML, CSS
-from weasyprint.text.fonts import FontConfiguration
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, ListItem, ListFlowable
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
 import tempfile
 
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Load biến môi trường từ file .env
+load_dotenv()
+
+# Khởi tạo Flask app
 app = Flask(__name__)
 app.config['SECRET_KEY'] = os.urandom(24)
 
@@ -25,6 +33,39 @@ if not GOOGLE_API_KEY:
 
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel('gemini-2.0-flash')
+
+# Đăng ký font Times New Roman
+pdfmetrics.registerFont(TTFont('TimesNewRoman', 'fonts/TimesNewRoman.ttf'))
+
+# Tạo styles với font Unicode
+styles = getSampleStyleSheet()
+styles.add(ParagraphStyle(
+    name='CustomTitle',
+    parent=styles['Heading1'],
+    fontName='TimesNewRoman',
+    fontSize=24,
+    spaceAfter=30,
+    encoding='utf-8',
+    leading=30
+))
+styles.add(ParagraphStyle(
+    name='CustomHeading',
+    parent=styles['Heading2'],
+    fontName='TimesNewRoman',
+    fontSize=18,
+    spaceAfter=12,
+    encoding='utf-8',
+    leading=22
+))
+styles.add(ParagraphStyle(
+    name='CustomNormal',
+    parent=styles['Normal'],
+    fontName='TimesNewRoman',
+    fontSize=12,
+    spaceAfter=6,
+    encoding='utf-8',
+    leading=14
+))
 
 class CVForm(FlaskForm):
     name = StringField('Họ và tên')
@@ -176,120 +217,55 @@ def download_cv():
     
     # Tạo file PDF tạm thời
     with tempfile.NamedTemporaryFile(suffix='.pdf', delete=False) as tmp:
-        # Thêm HTML wrapper cho nội dung
-        html_content = f"""
-        <!DOCTYPE html>
-        <html>
-        <head>
-            <meta charset="UTF-8">
-            <style>
-                @page {{
-                    margin: 2.5cm;
-                }}
-                body {{
-                    font-family: Arial, sans-serif;
-                    line-height: 1.6;
-                    color: #333;
-                }}
-                h1, h2, h3 {{
-                    color: #2c3e50;
-                    margin-top: 1.5em;
-                    margin-bottom: 0.5em;
-                }}
-                h1 {{
-                    font-size: 24px;
-                    border-bottom: 2px solid #2c3e50;
-                    padding-bottom: 0.3em;
-                }}
-                h2 {{
-                    font-size: 20px;
-                }}
-                h3 {{
-                    font-size: 18px;
-                }}
-                p {{
-                    margin: 0.5em 0;
-                }}
-                ul, ol {{
-                    margin: 0.5em 0;
-                    padding-left: 2em;
-                }}
-                li {{
-                    margin: 0.3em 0;
-                }}
-                .section {{
-                    margin-bottom: 1.5em;
-                }}
-                .item {{
-                    margin-bottom: 1em;
-                }}
-                .item-title {{
-                    font-weight: bold;
-                    color: #2c3e50;
-                }}
-                .item-subtitle {{
-                    color: #666;
-                    font-style: italic;
-                }}
-            </style>
-        </head>
-        <body>
-            <h1>Thông tin cá nhân</h1>
-            <div class="section">
-                <p><strong>Họ và tên:</strong> {personal_info['name']}</p>
-                <p><strong>Email:</strong> {personal_info['email']}</p>
-                <p><strong>Số điện thoại:</strong> {personal_info['phone']}</p>
-                <p><strong>Mô tả bản thân:</strong></p>
-                <p>{personal_info['summary']}</p>
-            </div>
-
-            <h2>Học vấn</h2>
-            <div class="section">
-                {''.join(f'''
-                <div class="item">
-                    <p class="item-title">{edu['degree']}</p>
-                    <p class="item-subtitle">{edu['school']} - {edu['year']}</p>
-                    <p>{edu['description']}</p>
-                </div>
-                ''' for edu in education)}
-            </div>
-
-            <h2>Kinh nghiệm</h2>
-            <div class="section">
-                {''.join(f'''
-                <div class="item">
-                    <p class="item-title">{exp['position']}</p>
-                    <p class="item-subtitle">{exp['company']} - {exp['period']}</p>
-                    <p>{exp['description']}</p>
-                </div>
-                ''' for exp in experience)}
-            </div>
-
-            <h2>Kỹ năng</h2>
-            <div class="section">
-                {''.join(f'''
-                <div class="item">
-                    <p class="item-title">{skill['category']}</p>
-                    <ul>
-                        {''.join(f'<li>{item}</li>' for item in skill['items'])}
-                    </ul>
-                </div>
-                ''' for skill in skills)}
-            </div>
-        </body>
-        </html>
-        """
+        # Tạo PDF với ReportLab
+        doc = SimpleDocTemplate(
+            tmp.name,
+            pagesize=A4,
+            rightMargin=72,
+            leftMargin=72,
+            topMargin=72,
+            bottomMargin=72
+        )
         
-        # Cấu hình font
-        font_config = FontConfiguration()
+        # Tạo nội dung
+        story = []
+        
+        # Thông tin cá nhân
+        story.append(Paragraph("Thông tin cá nhân", styles['CustomTitle']))
+        story.append(Paragraph(f"<b>Họ và tên:</b> {personal_info['name']}", styles['CustomNormal']))
+        story.append(Paragraph("<b>Họ tên:</b>", styles['CustomNormal']))
+        story.append(Paragraph(f"<b>Email:</b> {personal_info['email']}", styles['CustomNormal']))
+        story.append(Paragraph(f"<b>Số điện thoại:</b> {personal_info['phone']}", styles['CustomNormal']))
+        story.append(Paragraph(f"<b>Mô tả bản thân:</b>", styles['CustomNormal']))
+        story.append(Paragraph(personal_info['summary'], styles['CustomNormal']))
+        story.append(Spacer(1, 20))
+        
+        # Học vấn
+        story.append(Paragraph("Học vấn", styles['CustomHeading']))
+        for edu in education:
+            story.append(Paragraph(f"<b>{edu['degree']}</b>", styles['CustomNormal']))
+            story.append(Paragraph(f"{edu['school']} - {edu['year']}", styles['CustomNormal']))
+            story.append(Paragraph(edu['description'], styles['CustomNormal']))
+            story.append(Spacer(1, 12))
+        
+        # Kinh nghiệm
+        story.append(Paragraph("Kinh nghiệm", styles['CustomHeading']))
+        for exp in experience:
+            story.append(Paragraph(f"<b>{exp['position']}</b>", styles['CustomNormal']))
+            story.append(Paragraph(f"{exp['company']} - {exp['period']}", styles['CustomNormal']))
+            story.append(Paragraph(exp['description'], styles['CustomNormal']))
+            story.append(Spacer(1, 12))
+        
+        # Kỹ năng
+        story.append(Paragraph("Kỹ năng", styles['CustomHeading']))
+        for skill in skills:
+            story.append(Paragraph(f"<b>{skill['category']}</b>", styles['CustomNormal']))
+            items = [ListItem(Paragraph(item, styles['CustomNormal'])) for item in skill['items']]
+            story.append(ListFlowable(items, bulletType='bullet'))
+            story.append(Spacer(1, 12))
         
         # Tạo PDF
-        HTML(string=html_content).write_pdf(
-            tmp.name,
-            font_config=font_config,
-            stylesheets=[],
-            zoom=1
-        )
+        doc.build(story)
         
         return send_file(
             tmp.name,
@@ -299,4 +275,4 @@ def download_cv():
         )
 
 if __name__ == '__main__':
-    app.run(debug=True) 
+    app.run()
