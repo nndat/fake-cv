@@ -237,11 +237,14 @@
     </div>
 
     <script>
+        // Lấy download URL từ server
+        const downloadUrl = '{{ url_for("download_cv") }}';
+        
         function showLoading() {
             document.querySelector('.loading-overlay').style.display = 'flex';
             document.getElementById('backButton').disabled = true;
             document.getElementById('downloadButton').disabled = true;
-            document.getElementById('updateButton').disabled = true;
+            document.getElementById('updateButton').disabled = false;
         }
 
         function hideLoading() {
@@ -271,15 +274,13 @@
             });
         }
 
-        document.getElementById('cvForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+        function downloadCV() {
             showLoading();
+            const form = document.querySelector('form');
+            const formData = new FormData(form);
             
-            // Tạo form data
-            const formData = new FormData(this);
-            
-            // Gửi request
-            fetch('/download', {
+            // Sử dụng URL từ url_for
+            fetch(downloadUrl, {
                 method: 'POST',
                 body: formData
             })
@@ -290,7 +291,6 @@
                 return response.blob();
             })
             .then(blob => {
-                // Tạo URL cho file PDF
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
@@ -298,14 +298,20 @@
                 document.body.appendChild(a);
                 a.click();
                 window.URL.revokeObjectURL(url);
-                document.body.removeChild(a);
-                hideLoading();
+                a.remove();
             })
             .catch(error => {
                 console.error('Error:', error);
+                alert('Có lỗi xảy ra khi tạo PDF');
+            })
+            .finally(() => {
                 hideLoading();
-                alert('Có lỗi xảy ra khi tải CV. Vui lòng thử lại.');
             });
+        }
+
+        document.getElementById('cvForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            downloadCV();
         });
     </script>
 </body>
