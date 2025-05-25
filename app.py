@@ -221,6 +221,13 @@ def download_cv():
         'summary': request.form.get('summary', '')
     }
     
+    # Tạo tên file từ họ tên
+    full_name = personal_info['name'].strip()
+    # Loại bỏ các ký tự đặc biệt và thay thế khoảng trắng bằng dấu gạch dưới
+    safe_name = re.sub(r'[^a-zA-Z0-9\s]', '', full_name)
+    safe_name = re.sub(r'\s+', '_', safe_name)
+    filename = f"CV_{safe_name}.pdf"
+    
     # Lấy ngôn ngữ từ form
     language = request.form.get('language', 'vi')
     
@@ -323,7 +330,7 @@ def download_cv():
         return send_file(
             tmp.name,
             as_attachment=True,
-            download_name='cv.pdf',
+            download_name=filename,
             mimetype='application/pdf'
         )
 
